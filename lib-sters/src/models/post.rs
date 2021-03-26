@@ -2,7 +2,7 @@ use super::user;
 use derive_new::new;
 use std::vec::Vec;
 
-#[derive(Debug, new)]
+#[derive(Debug, new, Default)]
 pub struct Post {
     pub short_id: String,
     pub short_id_url: String,

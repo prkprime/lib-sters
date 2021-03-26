@@ -1,6 +1,6 @@
 use derive_new::new;
 
-#[derive(Debug, new)]
+#[derive(Debug, new, Default)]
 pub struct User {
     pub username: String,
     pub created_at: String,
