@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "tui",
+    "lib-sters",
+    "db",
+    "sync"
+]
