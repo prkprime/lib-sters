@@ -34,8 +34,8 @@ fn generate_url(path: LobstersPath, page: Option<u32>) -> String {
 
 pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Option<Vec<Post>> {
     let url = generate_url(path, page);
-    let responce: Response = minreq::get(url).send().unwrap();
-    let res_str: &str = responce.as_str().unwrap();
+    let response: Response = minreq::get(url).send().unwrap();
+    let res_str: &str = response.as_str().unwrap();
     let json_value: Value = serde_json::from_str(res_str).unwrap();
     let obj_vec: &Vec<Value> = json_value.as_array().unwrap();
     let mut posts: Vec<Post> = Vec::new();
@@ -47,9 +47,25 @@ pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Option<Vec<Post>> {
 }
 
 #[test]
-fn test_get_post() {
+fn test_get_posts() {
     let posts = get_posts(LobstersPath::Hottest, None).unwrap();
+    println!("{:?}", posts[0]);
     assert_ne!(posts.len(), 0)
+}
+
+pub fn get_post(post_id: &str) -> Post {
+    let url: String = format!("https://lobste.rs/s/{}.json", post_id);
+    let response: Response = minreq::get(url).send().unwrap();
+    let res_str: &str = response.as_str().unwrap();
+    let json_value: Value = serde_json::from_str(res_str).unwrap();
+    let post = parse_post(&json_value);
+    post
+}
+
+#[test]
+fn test_get_post() {
+    let post = get_post("sh2kcf");
+    assert_eq!(post.short_id, "sh2kcf");
 }
 
 fn parse_post(post_obj: &Value) -> Post {
