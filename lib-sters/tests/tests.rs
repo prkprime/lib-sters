@@ -27,8 +27,10 @@ mod get_post_tests {
 
     #[test]
     fn test_get_post_with_existing_id() {
-        let post = get_post("sh2kcf");
-        assert_eq!(post.short_id, "sh2kcf");
+        let post = get_post("nwvm1p");
+        assert_eq!(post.short_id, "nwvm1p");
+        assert_eq!(post.submitter_user.username, "erikmcclure");
+        assert_ne!(post.submitter_user.keybase_signatures.unwrap().len(), 0);
     }
 
     #[test]
