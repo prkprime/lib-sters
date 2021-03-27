@@ -3,30 +3,37 @@ use minreq::{self, Response};
 use models::{post::Post, user::User};
 use serde_json::Value;
 
-pub fn generate_url(path: &str, page: Option<u32>) -> Option<String> {
+pub enum LobstersPath {
+    Newest,
+    Hottest,
+}
+
+fn generate_url(path: LobstersPath, page: Option<u32>) -> String {
     let mut url: String = "https://lobste.rs/".to_owned();
-    if path == "newest" {
-        url = format!("{}newest", url);
-        match page {
-            Some(page) => url = format!("{}/page/{}", url, page),
-            None => {}
+    match path {
+        LobstersPath::Newest => {
+            url = format!("{}newest", url);
+            match page {
+                Some(page) => url = format!("{}/page/{}", url, page),
+                None => {}
+            }
+            url = format!("{}.json", url);
+            url
         }
-        url = format!("{}.json", url);
-        Some(url)
-    } else if path == "hottest" {
-        url = format!("{}hottest", url);
-        url = format!("{}.json", url);
-        match page {
-            Some(page) => url = format!("{}?page={}", url, page),
-            None => {}
+        LobstersPath::Hottest => {
+            url = format!("{}hottest", url);
+            url = format!("{}.json", url);
+            match page {
+                Some(page) => url = format!("{}?page={}", url, page),
+                None => {}
+            }
+            url
         }
-        Some(url)
-    } else {
-        None
     }
 }
 
-pub fn generate_posts(url: String) -> Vec<Post> {
+pub fn generate_posts(path: LobstersPath, page: Option<u32>) -> Option<Vec<Post>> {
+    let url = generate_url(path, page);
     let responce: Response = minreq::get(url).send().unwrap();
     let res_str: &str = responce.as_str().unwrap();
     let json_value: Value = serde_json::from_str(res_str).unwrap();
@@ -135,12 +142,49 @@ pub fn generate_posts(url: String) -> Vec<Post> {
         post.tags = Some(tags);
         posts.push(post);
     }
-    posts
+    Some(posts)
 }
 
-#[test]
-fn test_get_posts() {
-    for post in generate_posts(generate_url("hottest", None).unwrap()) {
-        println!("{:?}", post)
+#[cfg(test)]
+mod url_gen_tests {
+    use super::{generate_url, LobstersPath};
+    #[test]
+    fn generate_url_newest() {
+        assert_eq!(
+            generate_url(LobstersPath::Newest, None),
+            "https://lobste.rs/newest.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Newest, Some(654)),
+            "https://lobste.rs/newest/page/654.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Newest, Some(1u32)),
+            "https://lobste.rs/newest/page/1.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Newest, Some(599u32)),
+            "https://lobste.rs/newest/page/599.json"
+        );
+    }
+
+    #[test]
+    fn generate_url_hottest() {
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, None),
+            "https://lobste.rs/hottest.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, Some(6584)),
+            "https://lobste.rs/hottest.json?page=6584"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, Some(49u32)),
+            "https://lobste.rs/hottest.json?page=49"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, Some(3620)),
+            "https://lobste.rs/hottest.json?page=3620"
+        );
     }
 }
