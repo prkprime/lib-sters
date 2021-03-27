@@ -1,6 +1,6 @@
 pub mod models;
 use minreq::{self, Response};
-use models::{post::Post, user::User};
+use models::{kbsig::Kbsig, post::Post, user::User};
 use serde_json::Value;
 
 pub enum LobstersPath {
@@ -87,7 +87,7 @@ pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Vec<Post> {
     let obj_vec: &Vec<Value> = json_value.as_array().unwrap();
     let mut posts: Vec<Post> = Vec::new();
     for post_obj in obj_vec {
-        let post = parse_post(post_obj);
+        let post: Post = parse_post(post_obj);
         posts.push(post);
     }
     posts
@@ -209,5 +209,33 @@ fn parse_user(user_obj: &Value) -> User {
         }
         None => {}
     };
+    match user_obj.get("keybase_signatures") {
+        Some(kbsig_vec) => {
+            let mut kbsigs: Vec<Kbsig> = Vec::new();
+            for kbsig_obj in kbsig_vec.as_array().unwrap() {
+                let kbsig: Kbsig = parse_kbsig(kbsig_obj);
+                kbsigs.push(kbsig);
+            }
+            user.keybase_signatures = Some(kbsigs);
+        }
+        None => {}
+    };
     user
+}
+
+fn parse_kbsig(kbsig_obj: &Value) -> Kbsig {
+    let mut kbsig: Kbsig = Kbsig::default();
+    kbsig.kb_username = kbsig_obj
+        .get("kb_username")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_owned();
+    kbsig.sig_hash = kbsig_obj
+        .get("sig_hash")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .to_owned();
+    kbsig
 }
