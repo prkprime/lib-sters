@@ -32,9 +32,56 @@ fn generate_url(path: LobstersPath, page: Option<u32>) -> String {
     }
 }
 
-pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Option<Vec<Post>> {
+#[cfg(test)]
+mod url_gen_tests {
+    use super::{generate_url, LobstersPath};
+    #[test]
+    fn generate_url_newest() {
+        assert_eq!(
+            generate_url(LobstersPath::Newest, None),
+            "https://lobste.rs/newest.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Newest, Some(654)),
+            "https://lobste.rs/newest/page/654.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Newest, Some(1u32)),
+            "https://lobste.rs/newest/page/1.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Newest, Some(599u32)),
+            "https://lobste.rs/newest/page/599.json"
+        );
+    }
+
+    #[test]
+    fn generate_url_hottest() {
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, None),
+            "https://lobste.rs/hottest.json"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, Some(6584)),
+            "https://lobste.rs/hottest.json?page=6584"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, Some(49u32)),
+            "https://lobste.rs/hottest.json?page=49"
+        );
+        assert_eq!(
+            generate_url(LobstersPath::Hottest, Some(3620)),
+            "https://lobste.rs/hottest.json?page=3620"
+        );
+    }
+}
+
+pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Vec<Post> {
     let url = generate_url(path, page);
     let response: Response = minreq::get(url).send().unwrap();
+    if response.status_code != 200 {
+        return Vec::new();
+    }
     let res_str: &str = response.as_str().unwrap();
     let json_value: Value = serde_json::from_str(res_str).unwrap();
     let obj_vec: &Vec<Value> = json_value.as_array().unwrap();
@@ -43,29 +90,19 @@ pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Option<Vec<Post>> {
         let post = parse_post(post_obj);
         posts.push(post);
     }
-    Some(posts)
-}
-
-#[test]
-fn test_get_posts() {
-    let posts = get_posts(LobstersPath::Hottest, None).unwrap();
-    println!("{:?}", posts[0]);
-    assert_ne!(posts.len(), 0)
+    posts
 }
 
 pub fn get_post(post_id: &str) -> Post {
     let url: String = format!("https://lobste.rs/s/{}.json", post_id);
     let response: Response = minreq::get(url).send().unwrap();
+    if response.status_code != 200 {
+        return Post::default();
+    }
     let res_str: &str = response.as_str().unwrap();
     let json_value: Value = serde_json::from_str(res_str).unwrap();
     let post = parse_post(&json_value);
     post
-}
-
-#[test]
-fn test_get_post() {
-    let post = get_post("sh2kcf");
-    assert_eq!(post.short_id, "sh2kcf");
 }
 
 fn parse_post(post_obj: &Value) -> Post {
@@ -173,48 +210,4 @@ fn parse_user(user_obj: &Value) -> User {
         None => {}
     };
     user
-}
-
-#[cfg(test)]
-mod url_gen_tests {
-    use super::{generate_url, LobstersPath};
-    #[test]
-    fn generate_url_newest() {
-        assert_eq!(
-            generate_url(LobstersPath::Newest, None),
-            "https://lobste.rs/newest.json"
-        );
-        assert_eq!(
-            generate_url(LobstersPath::Newest, Some(654)),
-            "https://lobste.rs/newest/page/654.json"
-        );
-        assert_eq!(
-            generate_url(LobstersPath::Newest, Some(1u32)),
-            "https://lobste.rs/newest/page/1.json"
-        );
-        assert_eq!(
-            generate_url(LobstersPath::Newest, Some(599u32)),
-            "https://lobste.rs/newest/page/599.json"
-        );
-    }
-
-    #[test]
-    fn generate_url_hottest() {
-        assert_eq!(
-            generate_url(LobstersPath::Hottest, None),
-            "https://lobste.rs/hottest.json"
-        );
-        assert_eq!(
-            generate_url(LobstersPath::Hottest, Some(6584)),
-            "https://lobste.rs/hottest.json?page=6584"
-        );
-        assert_eq!(
-            generate_url(LobstersPath::Hottest, Some(49u32)),
-            "https://lobste.rs/hottest.json?page=49"
-        );
-        assert_eq!(
-            generate_url(LobstersPath::Hottest, Some(3620)),
-            "https://lobste.rs/hottest.json?page=3620"
-        );
-    }
 }
