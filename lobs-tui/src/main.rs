@@ -4,13 +4,13 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use lib::{events::Event, menu::MenuItem};
+use lib_sters::{get_posts, models::post::Post, LobstersPath};
 use std::{
     io,
     sync::mpsc,
     thread,
     time::{Duration, Instant},
 };
-use tui::Terminal;
 use tui::{backend::CrosstermBackend, layout::Rect};
 use tui::{
     layout::{Alignment, Constraint, Direction, Layout},
@@ -21,6 +21,10 @@ use tui::{
     style::Modifier,
     text::{Span, Spans},
     widgets::{Block, Borders, Tabs},
+};
+use tui::{
+    widgets::{Cell, Row, Table},
+    Terminal,
 };
 
 fn main() -> Result<(), io::Error> {
@@ -51,11 +55,16 @@ fn main() -> Result<(), io::Error> {
     let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
-    terminal.clear();
+    terminal.clear().unwrap();
 
     let menu_titles: Vec<&str> = vec!["Hottest", "Newest", "Saved", "Preferance", "Quit"];
     let mut active_menu_item: MenuItem = MenuItem::Hottest;
 
+    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None);
+    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None);
+    let hottest_table: Table = generate_table(MenuItem::Hottest, &hottest_posts);
+    let newest_table: Table = generate_table(MenuItem::Newest, &newest_posts);
+    let empty_table: Table = Table::new(vec![]);
     loop {
         terminal
             .draw(|rect| {
@@ -74,10 +83,10 @@ fn main() -> Result<(), io::Error> {
                     )
                     .split(size);
 
-                let boundary: Block = Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Thick);
+                // let boundary: Block = Block::default()
+                //     .borders(Borders::ALL)
+                //     .border_style(Style::default().fg(Color::White))
+                //     .border_type(BorderType::Thick);
 
                 let menu: Vec<Spans> = menu_titles
                     .iter()
@@ -97,16 +106,26 @@ fn main() -> Result<(), io::Error> {
 
                 let tabs = Tabs::new(menu)
                     .select(active_menu_item.into())
-                    .block(Block::default().title("Menu").borders(Borders::BOTTOM))
+                    .block(Block::default().title("Menu").borders(Borders::ALL))
                     .style(Style::default().fg(Color::White))
                     .highlight_style(Style::default().fg(Color::Green))
                     .divider(Span::raw("|"));
                 match active_menu_item {
-                    MenuItem::Hottest => {}
-                    MenuItem::Newest => {}
-                    MenuItem::Saved => {}
-                    MenuItem::Preference => {}
-                    MenuItem::Quit => {}
+                    MenuItem::Hottest => {
+                        rect.render_widget(hottest_table.clone(), chunks[1]);
+                    }
+                    MenuItem::Newest => {
+                        rect.render_widget(newest_table.clone(), chunks[1]);
+                    }
+                    MenuItem::Saved => {
+                        rect.render_widget(empty_table.clone(), chunks[1]);
+                    }
+                    MenuItem::Preference => {
+                        rect.render_widget(empty_table.clone(), chunks[1]);
+                    }
+                    MenuItem::Quit => {
+                        rect.render_widget(empty_table.clone(), chunks[1]);
+                    }
                 }
 
                 let footer: Paragraph = Paragraph::new("Footer goes brrr")
@@ -114,12 +133,12 @@ fn main() -> Result<(), io::Error> {
                     .style(Style::default().fg(Color::Cyan))
                     .block(
                         Block::default()
-                            .borders(Borders::TOP)
+                            .borders(Borders::ALL)
                             .style(Style::default().fg(Color::White))
                             .border_type(BorderType::Plain),
                     );
 
-                rect.render_widget(boundary, size);
+                // rect.render_widget(boundary, size);
                 rect.render_widget(tabs, chunks[0]);
                 rect.render_widget(footer, chunks[2]);
             })
@@ -133,7 +152,7 @@ fn main() -> Result<(), io::Error> {
                 KeyCode::Char('q') => {
                     disable_raw_mode().unwrap();
                     terminal.show_cursor().unwrap();
-                    terminal.clear();
+                    terminal.clear().unwrap();
                     break;
                 }
                 _ => {}
@@ -142,4 +161,45 @@ fn main() -> Result<(), io::Error> {
         }
     }
     Ok(())
+}
+
+fn generate_table(menu_item: MenuItem, posts: &Vec<Post>) -> Table {
+    let mut post_rows: Vec<Row> = Vec::new();
+    for (index, post) in posts.iter().enumerate() {
+        let row: Row = Row::new(vec![
+            Cell::from(Span::raw("❯")),
+            Cell::from(Span::raw(index.to_string())),
+            Cell::from(Span::raw(&post.title)),
+        ]);
+        post_rows.push(row)
+    }
+    let posts_table: Table = Table::new(post_rows)
+        .header(Row::new(vec![
+            Cell::from(Span::styled("", Style::default())),
+            Cell::from(Span::styled(
+                "No.",
+                Style::default().add_modifier(Modifier::BOLD),
+            )),
+            Cell::from(Span::styled(
+                "Posts",
+                Style::default().add_modifier(Modifier::BOLD),
+            )),
+        ]))
+        .block(
+            Block::default()
+                .title(match menu_item {
+                    MenuItem::Hottest => "Hottest",
+                    MenuItem::Newest => "Newest",
+                    _ => "",
+                })
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .border_type(BorderType::Plain),
+        )
+        .widths(&[
+            Constraint::Length(1),
+            Constraint::Length(3),
+            Constraint::Min(5),
+        ]);
+    posts_table
 }
