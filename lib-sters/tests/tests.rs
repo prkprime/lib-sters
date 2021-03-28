@@ -23,7 +23,7 @@ mod get_posts_tests {
 
 #[cfg(test)]
 mod get_post_tests {
-    use lib_sters::*;
+    use lib_sters::get_post;
 
     #[test]
     fn test_get_post_with_existing_id() {
@@ -35,7 +35,7 @@ mod get_post_tests {
 
     #[test]
     fn test_get_post_invalid_id() {
-        let post = get_post("sh2kcfg").unwrap();
-        assert_eq!(post.short_id, "");
+        let post = get_post("sh2kcfg");
+        assert!(post.is_err());
     }
 }
