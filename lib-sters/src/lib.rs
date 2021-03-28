@@ -1,3 +1,4 @@
+pub mod error;
 pub mod models;
 use minreq::{self, Response};
 use models::{Kbsig, Post, User};
