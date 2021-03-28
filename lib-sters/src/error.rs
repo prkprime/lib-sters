@@ -5,7 +5,10 @@ pub enum LobstersError {
     #[error("failed to get post from id {0}")]
     FailedToGetPost(String),
     #[error("failed to get posts")]
-    FailedToGetPosts,
+    FailedToGetPosts {
+        #[from]
+        source: ureq::Error,
+    },
     #[error("unexpected IO error")]
     IO {
         #[from]
@@ -15,11 +18,5 @@ pub enum LobstersError {
     JSON {
         #[from]
         source: serde_json::Error,
-    },
-
-    #[error("unexpected network error")]
-    Network {
-        #[from]
-        source: minreq::Error,
     },
 }
