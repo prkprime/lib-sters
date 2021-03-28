@@ -1,6 +1,6 @@
 pub mod models;
 use minreq::{self, Response};
-use models::{kbsig::Kbsig, post::Post, user::User};
+use models::{Kbsig, Post, User};
 use serde_json::Value;
 
 pub enum LobstersPath {
@@ -187,7 +187,7 @@ fn parse_user(user_obj: &Value) -> User {
     };
     match user_obj.get("avtar_url") {
         Some(avtar_url) => {
-            user.avtar_url = Some(avtar_url.as_str().unwrap().to_owned());
+            user.avatar_url = Some(avtar_url.as_str().unwrap().to_owned());
         }
         None => {}
     };

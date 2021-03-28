@@ -4,7 +4,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use lib::{events::Event, menu::MenuItem};
-use lib_sters::{get_posts, models::post::Post, LobstersPath};
+use lib_sters::{get_posts, models::Post, LobstersPath};
 use std::{
     io,
     sync::mpsc,
