@@ -1,4 +1,5 @@
 pub mod lib;
+use color_eyre::Result;
 use crossterm::{
     event::{self, Event as CEvent, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -27,7 +28,8 @@ use tui::{
     Terminal,
 };
 
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<()> {
+    color_eyre::install()?;
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(200);
     thread::spawn(move || {
@@ -54,105 +56,103 @@ fn main() -> Result<(), io::Error> {
     enable_raw_mode().expect("can run raw mode");
     let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).unwrap();
-    terminal.clear().unwrap();
+    let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
 
     let menu_titles: Vec<&str> = vec!["Hottest", "Newest", "Saved", "Preferance", "Quit"];
     let mut active_menu_item: MenuItem = MenuItem::Hottest;
 
-    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None).unwrap();
-    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None).unwrap();
+    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None)?;
+    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None)?;
     let hottest_table: Table = generate_table(MenuItem::Hottest, &hottest_posts);
     let newest_table: Table = generate_table(MenuItem::Newest, &newest_posts);
     let empty_table: Table = Table::new(vec![]);
     loop {
-        terminal
-            .draw(|rect| {
-                let size = rect.size();
+        terminal.draw(|rect| {
+            let size = rect.size();
 
-                let chunks: Vec<Rect> = Layout::default()
-                    .direction(Direction::Vertical)
-                    .margin(1)
-                    .constraints(
-                        [
-                            Constraint::Length(3),
-                            Constraint::Min(2),
-                            Constraint::Length(3),
-                        ]
-                        .as_ref(),
-                    )
-                    .split(size);
+            let chunks: Vec<Rect> = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Min(2),
+                        Constraint::Length(3),
+                    ]
+                    .as_ref(),
+                )
+                .split(size);
 
-                // let boundary: Block = Block::default()
-                //     .borders(Borders::ALL)
-                //     .border_style(Style::default().fg(Color::White))
-                //     .border_type(BorderType::Thick);
+            // let boundary: Block = Block::default()
+            //     .borders(Borders::ALL)
+            //     .border_style(Style::default().fg(Color::White))
+            //     .border_type(BorderType::Thick);
 
-                let menu: Vec<Spans> = menu_titles
-                    .iter()
-                    .map(|t| {
-                        let (first, rest) = t.split_at(1);
-                        Spans::from(vec![
-                            Span::styled(
-                                first,
-                                Style::default()
-                                    .fg(Color::Green)
-                                    .add_modifier(Modifier::UNDERLINED),
-                            ),
-                            Span::styled(rest, Style::default().fg(Color::White)),
-                        ])
-                    })
-                    .collect();
+            let menu: Vec<Spans> = menu_titles
+                .iter()
+                .map(|t| {
+                    let (first, rest) = t.split_at(1);
+                    Spans::from(vec![
+                        Span::styled(
+                            first,
+                            Style::default()
+                                .fg(Color::Green)
+                                .add_modifier(Modifier::UNDERLINED),
+                        ),
+                        Span::styled(rest, Style::default().fg(Color::White)),
+                    ])
+                })
+                .collect();
 
-                let tabs = Tabs::new(menu)
-                    .select(active_menu_item.into())
-                    .block(Block::default().title("Menu").borders(Borders::ALL))
-                    .style(Style::default().fg(Color::White))
-                    .highlight_style(Style::default().fg(Color::Green))
-                    .divider(Span::raw("|"));
-                match active_menu_item {
-                    MenuItem::Hottest => {
-                        rect.render_widget(hottest_table.clone(), chunks[1]);
-                    }
-                    MenuItem::Newest => {
-                        rect.render_widget(newest_table.clone(), chunks[1]);
-                    }
-                    MenuItem::Saved => {
-                        rect.render_widget(empty_table.clone(), chunks[1]);
-                    }
-                    MenuItem::Preference => {
-                        rect.render_widget(empty_table.clone(), chunks[1]);
-                    }
-                    MenuItem::Quit => {
-                        rect.render_widget(empty_table.clone(), chunks[1]);
-                    }
+            let tabs = Tabs::new(menu)
+                .select(active_menu_item.into())
+                .block(Block::default().title("Menu").borders(Borders::ALL))
+                .style(Style::default().fg(Color::White))
+                .highlight_style(Style::default().fg(Color::Green))
+                .divider(Span::raw("|"));
+            match active_menu_item {
+                MenuItem::Hottest => {
+                    rect.render_widget(hottest_table.clone(), chunks[1]);
                 }
+                MenuItem::Newest => {
+                    rect.render_widget(newest_table.clone(), chunks[1]);
+                }
+                MenuItem::Saved => {
+                    rect.render_widget(empty_table.clone(), chunks[1]);
+                }
+                MenuItem::Preference => {
+                    rect.render_widget(empty_table.clone(), chunks[1]);
+                }
+                MenuItem::Quit => {
+                    rect.render_widget(empty_table.clone(), chunks[1]);
+                }
+            }
 
-                let footer: Paragraph = Paragraph::new("Footer goes brrr")
-                    .alignment(Alignment::Center)
-                    .style(Style::default().fg(Color::Cyan))
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .style(Style::default().fg(Color::White))
-                            .border_type(BorderType::Plain),
-                    );
+            let footer: Paragraph = Paragraph::new("Footer goes brrr")
+                .alignment(Alignment::Center)
+                .style(Style::default().fg(Color::Cyan))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .style(Style::default().fg(Color::White))
+                        .border_type(BorderType::Plain),
+                );
 
-                // rect.render_widget(boundary, size);
-                rect.render_widget(tabs, chunks[0]);
-                rect.render_widget(footer, chunks[2]);
-            })
-            .unwrap();
-        match rx.recv().unwrap() {
+            // rect.render_widget(boundary, size);
+            rect.render_widget(tabs, chunks[0]);
+            rect.render_widget(footer, chunks[2]);
+        })?;
+        match rx.recv()? {
             Event::Input(event) => match event.code {
                 KeyCode::Char('h') => active_menu_item = MenuItem::Hottest,
                 KeyCode::Char('n') => active_menu_item = MenuItem::Newest,
                 KeyCode::Char('s') => active_menu_item = MenuItem::Saved,
                 KeyCode::Char('p') => active_menu_item = MenuItem::Preference,
                 KeyCode::Char('q') => {
-                    disable_raw_mode().unwrap();
-                    terminal.show_cursor().unwrap();
-                    terminal.clear().unwrap();
+                    disable_raw_mode()?;
+                    terminal.show_cursor()?;
+                    terminal.clear()?;
                     break;
                 }
                 _ => {}
