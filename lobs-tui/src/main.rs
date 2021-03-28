@@ -1,7 +1,7 @@
 pub mod lib;
 use crossterm::{
-    event::{self, Event as CEvent},
-    terminal::enable_raw_mode,
+    event::{self, Event as CEvent, KeyCode},
+    terminal::{disable_raw_mode, enable_raw_mode},
 };
 use lib::{events::Event, menu::MenuItem};
 use std::{
@@ -124,5 +124,22 @@ fn main() -> Result<(), io::Error> {
                 rect.render_widget(footer, chunks[2]);
             })
             .unwrap();
+        match rx.recv().unwrap() {
+            Event::Input(event) => match event.code {
+                KeyCode::Char('h') => active_menu_item = MenuItem::Hottest,
+                KeyCode::Char('n') => active_menu_item = MenuItem::Newest,
+                KeyCode::Char('s') => active_menu_item = MenuItem::Saved,
+                KeyCode::Char('p') => active_menu_item = MenuItem::Preference,
+                KeyCode::Char('q') => {
+                    disable_raw_mode().unwrap();
+                    terminal.show_cursor().unwrap();
+                    terminal.clear();
+                    break;
+                }
+                _ => {}
+            },
+            Event::Tick => {}
+        }
     }
+    Ok(())
 }

@@ -7,3 +7,4 @@ members = [
     "sync"
 ]
 
+default-members = ["lobs-tui"]
