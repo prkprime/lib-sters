@@ -60,8 +60,8 @@ fn main() -> Result<(), io::Error> {
     let menu_titles: Vec<&str> = vec!["Hottest", "Newest", "Saved", "Preferance", "Quit"];
     let mut active_menu_item: MenuItem = MenuItem::Hottest;
 
-    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None);
-    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None);
+    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None).unwrap();
+    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None).unwrap();
     let hottest_table: Table = generate_table(MenuItem::Hottest, &hottest_posts);
     let newest_table: Table = generate_table(MenuItem::Newest, &newest_posts);
     let empty_table: Table = Table::new(vec![]);

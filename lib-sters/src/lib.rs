@@ -1,5 +1,6 @@
 pub mod error;
 pub mod models;
+use error::LobstersError;
 use minreq::{self, Response};
 use models::{Kbsig, Post, User};
 use serde_json::Value;
@@ -77,33 +78,33 @@ mod url_gen_tests {
     }
 }
 
-pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Vec<Post> {
+pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Result<Vec<Post>, LobstersError> {
     let url = generate_url(path, page);
-    let response: Response = minreq::get(url).send().unwrap();
+    let response: Response = minreq::get(url).send()?;
     if response.status_code != 200 {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    let res_str: &str = response.as_str().unwrap();
-    let json_value: Value = serde_json::from_str(res_str).unwrap();
+    let res_str: &str = response.as_str()?;
+    let json_value: Value = serde_json::from_str(res_str)?;
     let obj_vec: &Vec<Value> = json_value.as_array().unwrap();
     let mut posts: Vec<Post> = Vec::new();
     for post_obj in obj_vec {
         let post: Post = parse_post(post_obj);
         posts.push(post);
     }
-    posts
+    Ok(posts)
 }
 
-pub fn get_post(post_id: &str) -> Post {
+pub fn get_post(post_id: &str) -> Result<Post, LobstersError> {
     let url: String = format!("https://lobste.rs/s/{}.json", post_id);
-    let response: Response = minreq::get(url).send().unwrap();
+    let response: Response = minreq::get(url).send()?;
     if response.status_code != 200 {
-        return Post::default();
+        return Ok(Post::default());
     }
-    let res_str: &str = response.as_str().unwrap();
-    let json_value: Value = serde_json::from_str(res_str).unwrap();
+    let res_str: &str = response.as_str()?;
+    let json_value: Value = serde_json::from_str(res_str)?;
     let post = parse_post(&json_value);
-    post
+    Ok(post)
 }
 
 fn parse_post(post_obj: &Value) -> Post {
