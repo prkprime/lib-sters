@@ -1,8 +1,9 @@
 [workspace]
 
 members = [
-    "tui",
+    "lobs-tui",
     "lib-sters",
     "db",
     "sync"
 ]
+
