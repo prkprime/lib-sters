@@ -30,6 +30,10 @@ use tui::{
 
 fn main() -> Result<()> {
     color_eyre::install()?;
+
+    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None)?;
+    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None)?;
+
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(200);
     thread::spawn(move || {
@@ -62,8 +66,6 @@ fn main() -> Result<()> {
     let menu_titles: Vec<&str> = vec!["Hottest", "Newest", "Saved", "Preferance", "Quit"];
     let mut active_menu_item: MenuItem = MenuItem::Hottest;
 
-    let hottest_posts: Vec<Post> = get_posts(LobstersPath::Hottest, None)?;
-    let newest_posts: Vec<Post> = get_posts(LobstersPath::Newest, None)?;
     let hottest_table: Table = generate_table(MenuItem::Hottest, &hottest_posts);
     let newest_table: Table = generate_table(MenuItem::Newest, &newest_posts);
     let empty_table: Table = Table::new(vec![]);
