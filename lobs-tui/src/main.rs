@@ -86,11 +86,6 @@ fn main() -> Result<()> {
                 )
                 .split(size);
 
-            // let boundary: Block = Block::default()
-            //     .borders(Borders::ALL)
-            //     .border_style(Style::default().fg(Color::White))
-            //     .border_type(BorderType::Thick);
-
             let menu: Vec<Spans> = menu_titles
                 .iter()
                 .map(|t| {
@@ -141,7 +136,6 @@ fn main() -> Result<()> {
                         .border_type(BorderType::Plain),
                 );
 
-            // rect.render_widget(boundary, size);
             rect.render_widget(tabs, chunks[0]);
             rect.render_widget(footer, chunks[2]);
         })?;
