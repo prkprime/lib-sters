@@ -10,27 +10,17 @@ pub enum LobstersPath {
 }
 
 fn generate_url(path: LobstersPath, page: Option<u32>) -> String {
-    let mut url: String = "https://lobste.rs/".to_owned();
-    match path {
-        LobstersPath::Newest => {
-            url = format!("{}newest", url);
-            match page {
-                Some(page) => url = format!("{}/page/{}", url, page),
-                None => {}
-            }
-            url = format!("{}.json", url);
-            url
+    format!(
+        "https://lobste.rs/{}.json?page={}",
+        match path {
+            LobstersPath::Hottest => "hottest",
+            LobstersPath::Newest => "newest",
+        },
+        match page {
+            Some(page) => page,
+            None => 1,
         }
-        LobstersPath::Hottest => {
-            url = format!("{}hottest", url);
-            url = format!("{}.json", url);
-            match page {
-                Some(page) => url = format!("{}?page={}", url, page),
-                None => {}
-            }
-            url
-        }
-    }
+    )
 }
 
 #[cfg(test)]
@@ -40,19 +30,19 @@ mod url_gen_tests {
     fn generate_url_newest() {
         assert_eq!(
             generate_url(LobstersPath::Newest, None),
-            "https://lobste.rs/newest.json"
+            "https://lobste.rs/newest.json?page=1"
         );
         assert_eq!(
             generate_url(LobstersPath::Newest, Some(654)),
-            "https://lobste.rs/newest/page/654.json"
+            "https://lobste.rs/newest.json?page=654"
         );
         assert_eq!(
             generate_url(LobstersPath::Newest, Some(1u32)),
-            "https://lobste.rs/newest/page/1.json"
+            "https://lobste.rs/newest.json?page=1"
         );
         assert_eq!(
             generate_url(LobstersPath::Newest, Some(599u32)),
-            "https://lobste.rs/newest/page/599.json"
+            "https://lobste.rs/newest.json?page=599"
         );
     }
 
@@ -60,7 +50,7 @@ mod url_gen_tests {
     fn generate_url_hottest() {
         assert_eq!(
             generate_url(LobstersPath::Hottest, None),
-            "https://lobste.rs/hottest.json"
+            "https://lobste.rs/hottest.json?page=1"
         );
         assert_eq!(
             generate_url(LobstersPath::Hottest, Some(6584)),
