@@ -51,3 +51,20 @@ pub struct Comment {
     pub indent_level: i32,
     pub commenting_user: User,
 }
+
+#[derive(Debug, Default, Deserialize)]
+pub struct PostDetails {
+    pub short_id: String,
+    pub short_id_url: String,
+    pub created_at: String,
+    pub title: String,
+    pub url: String,
+    pub score: i32,
+    pub flags: u32,
+    pub comment_count: Option<u32>,
+    pub description: Option<String>,
+    pub comments_url: String,
+    pub submitter_user: User,
+    pub tags: Option<Vec<String>>,
+    pub comments: Option<Vec<Comment>>,
+}
