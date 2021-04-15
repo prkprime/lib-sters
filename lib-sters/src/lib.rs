@@ -1,7 +1,7 @@
 pub mod error;
 pub mod models;
 use error::LobstersError;
-use models::Post;
+use models::{Post, PostDetails};
 use ureq;
 
 pub enum LobstersPath {
@@ -76,11 +76,11 @@ pub fn get_posts(path: LobstersPath, page: Option<u32>) -> Result<Vec<Post>, Lob
     };
 }
 
-pub fn get_post(post_id: &str) -> Result<Post, LobstersError> {
+pub fn get_post(post_id: &str) -> Result<PostDetails, LobstersError> {
     let url: String = format!("https://lobste.rs/s/{}.json", post_id);
     let r = ureq::get(&url);
     return match r.call() {
-        Ok(response) => Ok(response.into_json::<Post>()?),
+        Ok(response) => Ok(response.into_json::<PostDetails>()?),
         Err(err) => Err(LobstersError::FailedToGetPosts { source: err }),
     };
 }
