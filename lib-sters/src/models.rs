@@ -35,3 +35,19 @@ pub struct Post {
     pub submitter_user: User,
     pub tags: Option<Vec<String>>,
 }
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Comment {
+    pub short_id: String,
+    pub short_id_url: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub is_deleted: bool,
+    pub is_moderated: bool,
+    pub score: i32,
+    pub flags: u32,
+    pub comment: String,
+    pub url: String,
+    pub indent_level: i32,
+    pub commenting_user: User,
+}
