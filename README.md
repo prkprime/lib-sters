@@ -1,3 +1,3 @@
 # lib-sters
 
-rust library for libste.rs
+rust library for [lobste.rs](https://lobste.rs)
